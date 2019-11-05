@@ -1,0 +1,27 @@
+<!DOCTYPE html >
+<html >
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/reset.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+	<script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="/static/js/slide.js"></script>
+</head>
+<body>
+{% include 'nav.html' %}
+{% block search_bar_clearfix %}
+{% endblock %}
+
+{% block navbar_con%}
+{% endblock %}
+
+
+
+{% block main%}
+{% endblock %}
+
+{% include 'footer.html' %}
+</body>
+</html>

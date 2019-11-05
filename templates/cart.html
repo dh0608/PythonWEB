@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% include 'nav.html' %}
+{% load static %}
+{% block search_bar_clearfix %}
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script>
+
+        $(function () {
+            // 页面加载计算商品小计
+            function getprice() {
+                // 所有商品都勾选
+                $('input[type=checkbox]').prop('checked', true);
+                //  商品数量
+                $('.num_show').each(function () {
+                    var num = $(this).val();
+                    num = parseInt(num);
+                    //  商品单价
+                    var price = $(this).parents('li').prev().text();
+                    price = price.split('元')[0];
+                    price = parseFloat(price);
+                    var total = price * num;
+                    $(this).parents('li').next().text(total.toFixed(2) + '元');
+                });
+            }
+
+            getprice();
+            getTotal();
+            // 全选、反选
+            $('input[type=checkbox]:last').click(function () {
+                $('.ck').prop('checked', $(this).prop('checked'));
+                getTotal()
+            });
+
+            // 单选取消全选
+            $('.item').click(function () {
+                // 获取每个单选框的状态
+                var len = $('.item').length;
+                // 假设每个勾选框结果为true
+                var checklen = $('.item:checked').length;
+                // 如果每个单选框都是勾选
+                if (len == checklen) {
+                    $('input[type=checkbox]:last').prop('checked', true)
+                } else {
+                    $('input[type=checkbox]:last').prop('checked', false)
+                }
+                getTotal()
+            });
+
+            // 点击数量增加
+            $('.add').click(function () {
+                var id = $(this).attr("name");
+                // 获取数量
+                var num = $(this).prev().val();
+                num = parseInt(num);
+                // 每次点击数量加1
+                var ck = num + 1;
+                // 单价
+                var p = $(this).parent().parent().prev().text();
+                p = p.split('元')[0];
+                p = parseFloat(p);
+                // 小计
+                var ptotal = ck * p;
+                $(this).prev().val(ck);
+                $(this).parent().parent().next().text(ptotal.toFixed(2) + '元');
+                getTotal();
+
+                var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+                $.post('/cart/',
+                    {"csrfmiddlewaretoken": csrf, goodsid: id, goodsnum: ck},
+                    function (data) {
+                        console.log(222)
+                    }
+                )
+            });
+
+            // 点击数量减少
+            $('.minus').click(function () {
+                var id = $(this).attr("name");
+                // 获取数量
+                var num = $(this).next().val();
+                num = parseInt(num);
+                // 每次点击数量减1
+                var ck = num - 1;
+                // 单价
+                var p = $(this).parent().parent().prev().text();
+                p = p.split('元')[0];
+                p = parseFloat(p);
+                // 小计
+                var ptotal = ck * p;
+                if (num == 0) {
+                    return
+                }
+                $(this).next().val(ck);
+                $(this).parent().parent().next().text(ptotal.toFixed(2) + '元');
+                getTotal();
+
+                var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+                $.post('/cart/',
+                    {"csrfmiddlewaretoken": csrf, goodsid: id, goodsnum: ck},
+                    function (data) {
+                        console.log(222)
+                    }
+                )
+            });
+
+            // 删除商品效果1:不勾选即可删除
+            /*
+               $('.del').click(function () {
+                   $(this).parents('.cart_list_td').remove()
+               });
+             */
+
+            // 删除商品效果2：勾选才能删除
+            $('.del').click(function () {
+                if ($('.item').prop('checked')) {
+                    $(this).parents('.cart_list_td').remove()
+                }
+                getTotal()
+            });
+
+            //  手动输入商品数量
+            /*
+                $('.num_show').change(function () {
+                    $('.item').prop('checnked', true);
+                    // 商品数量
+                    var num = $(this).val();
+                    // 校验
+                    if (isNaN(num) || num.trim().length==0 || parseInt(num)<=0){
+                        num = 1;
+                        $(this).val(num);
+                    }
+                    // 单价
+                    var p = $(this).parent().parent().prev().text();
+                    p = p.split('元')[0];
+                    p = parseFloat(p);
+                    var sum = num * p;
+                    // 小计
+                    $(this).parent().parent().next().text(sum.toFixed(2));
+                    getTotal();
+                    var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+                    var id = $('.item').val();
+                    $.post('/cart/',
+                        {"csrfmiddlewaretoken": csrf, goodsid: id, goodsnum: num},
+                        function (data) {
+                        console.log(222)
+                        }
+                    )
+                });
+            */
+
+            // 计算总价
+            function getTotal() {
+                var sum = 0; // 总价
+                var totalcount = 0;  // 总数量
+                $('.item').each(function () {
+                    if (this.checked) {
+                        // 每个商品的小计
+                        var money = $(this).parents('.cart_list_td').find('[class~=col07]').text().split('元')[0];
+                        money = money * 1;
+                        // 每个商品的数量
+                        var number = $(this).parents('.cart_list_td').find('[class~=num_show]').val();
+                        number = parseInt(number);
+                        sum += money;
+                        totalcount += number;
+                    }
+
+                });
+                $('.total').text(sum.toFixed(2));
+                $('.count').text(totalcount);
+            }
+
+            // 结算购物车到订单页
+            $('#order').click(function () {
+                //
+                var str = '';
+                $('.item:checked').each(function () {
+                    var id = $(this).attr('name');
+                    console.log(id);
+                    str += 'id=' + id + '&'
+
+                });
+                var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+                $.get('/place_order/?'+str,
+
+                    function (data) {
+                        console.log(222)
+                    }
+                )
+            });
+
+
+        })
+    </script>
+    <div class="search_bar clearfix">
+        <a href="/" class="logo fl"><img src="/static/images/logo.png"></a>
+        <div class="sub_page_name fl">|&nbsp;购物车</div>
+        <div class="search_con fr">
+            <input type="text" class="input_text fl" name="" placeholder="搜索商品">
+            <input type="button" class="input_btn fr" name="" value="搜索">
+        </div>
+    </div>
+{% endblock %}
+{% block main %}
+    <div class="total_count">全部商品<em class="count">0</em>件</div>
+    <ul class="cart_list_th clearfix">
+        <li class="col01">商品名称</li>
+        <li class="col02">商品单位</li>
+        <li class="col03">商品价格</li>
+        <li class="col04">数量</li>
+        <li class="col05">小计</li>
+        <li class="col06">操作</li>
+    </ul>
+    {% for foo in us %}
+
+        <ul class="cart_list_td clearfix">
+            <li class="col01"><input type="checkbox" class="ck item" name="{{ foo.id }}" value="{{ foo.id }}"></li>
+            <li class="col02"><img src="{{ foo.goods.goodsimg }}"></li>
+            <li class="col03">{{ foo.goods.goodsname }}<br><em>{{ foo.goodprice }}元/{{ foo.goods.goodsnum }}</em></li>
+            <li class="col04">{{ foo.goods.goodsnum }}</li>
+            <li class="col05" id="price">{{ foo.goodprice }}元</li>
+            <li class="col06">
+                <div class="num_add">
+                    <a href="javascript:;" name="{{ foo.id }}" class="minus fl">-</a>
+                    <input type="text" class="num_show fl" value="{{ foo.goodsnum }}" readonly>
+                    <a href="javascript:;" name="{{ foo.id }}" class="add fl">+</a>
+                </div>
+            </li>
+            <li class="col07">0.00元</li>
+            <li class="col08"><a href="javascript:;" class="del">删除</a></li>
+        </ul>
+    {% endfor %}
+
+    <ul class="settlements">
+        {% csrf_token %}
+        <li class="col01"><input type="checkbox" class="ck" name=""></li>
+        <li class="col02">全选</li>
+        <li class="col03">合计(不含运费)：<span>¥</span><em class="total">0.00</em><br>共计<b class="count">0</b>件商品</li>
+        <li class="col04"><a href="javascript:;" id="order">去结算</a></li>
+    </ul>
+{% endblock %}
+{% include 'footer.html' %}
+
